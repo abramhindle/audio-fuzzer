@@ -1,0 +1,56 @@
+<CsoundSynthesizer>
+<CsOptions>
+</CsOptions>
+<CsInstruments>
+
+sr = 44100
+ksmps = 32
+nchnls = 2
+0dbfs = 1
+
+instr 1 
+
+ilen   filelen p4
+print  ilen
+ichn   filenchnls  p4
+p3 = ilen*1.01
+
+asig diskin2 p4, 1, 0, 0
+aorig = asig
+
+
+{% if effect.whitenoise %}
+;;; whitenoise
+anoise noise {{ effect.whitenoise.amp }}, {{ effect.whitenoise.beta }}
+asig = asig + anoise
+{% endif %}
+
+{% if effect.highpass %}
+;;; highpass
+asig butterhp asig, {{ effect.highpass.freq }}
+{% endif %}
+
+{% if effect.reverb %}
+;;; reverb effect
+asig, asigR freeverb asig, asig, {{ effect.reverb.roomsize }} , {{ effect.reverb.damp }} 
+{% endif %}
+{% if effect.tree %}
+;;; trees as a lowpass
+asig lowpass2 asig, {{ effect.tree.cf }} , {{ effect.tree.q }} 
+{% endif %}
+
+{% if stereo %}
+   outs asig, asig
+{% else %}
+     out    asig
+{% endif %}
+
+endin
+</CsInstruments>
+<CsScore>
+
+i 1 0 0.01 "{{wavefile}}"
+
+e
+</CsScore>
+</CsoundSynthesizer>

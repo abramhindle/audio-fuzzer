@@ -2,6 +2,7 @@ import random
 import jinja2 
 import argparse
 import os
+import json
 
 def get_random_generator(name):
     """ I generate functions that choose random numbers """
@@ -69,8 +70,8 @@ class Tree(Effect):
         self.name = Tree.name
         self.q = Param({"name":"q",
                "v":d.get("q",None),
-               "min":d.get("q_min",1.0),
-               "max":d.get("q_max",100.0)
+               "min":d.get("q_min",0.1),
+               "max":d.get("q_max",2.0)
         })
         self.cf = Param({"name":"cf",
                "v":d.get("cf",None),
@@ -79,6 +80,41 @@ class Tree(Effect):
         })
         self.params = [self.q, self.cf]
 
+class Highpass(Effect):
+    """ I represent a Tree """
+    name = "highpass"
+    def __init__(self,d=None):
+        if d == None:
+            d = dict()
+        self.name = Highpass.name
+        self.freq = Param({"name":"freq",
+               "v":d.get("freq",None),
+               "min":d.get("freq_min",60),
+               "max":d.get("freq_max",1000)
+        })
+        self.params = [self.freq]
+
+
+class WhiteNoise(Effect):
+    """ I represent a Whitenoise """
+    name = "whitenoise"
+    def __init__(self,d=None):
+        if d == None:
+            d = dict()
+        self.name = WhiteNoise.name
+        self.amp = Param({"name":"amp",
+               "v":d.get("amp",None),
+               "min":d.get("amp_min",0),
+               "max":d.get("amp_max",1.0)
+        })
+        self.beta = Param({"name":"beta",
+                          "v":d.get("beta",None),
+                          "min":d.get("beta_min",0),
+                          "max":d.get("beta_max",1.0)
+        })
+        self.params = [self.amp, self.beta]
+
+        
 
         
 def gen_reverb(params):
@@ -101,16 +137,58 @@ def gen_manytrees(params):
         "cf_max":1000.0
     }).gen_params()
 
+def gen_highpass(params):
+    params["effect"]["highpass"] = Highpass({}).gen_params()
+
+def gen_highhighpass(params):
+    params["effect"]["highpass"] = Highpass({
+        "freq_min":800.0,
+        "freq_max":2000.0
+    }).gen_params()
+
+def gen_whitenoise(params):
+    params["effect"]["whitenoise"] = WhiteNoise({}).gen_params()
+
+def gen_hiss(params):
+    params["effect"]["whitenoise"] = WhiteNoise({
+        "amp_min":0.01,
+        "amp_max":0.1,
+        "beta_min":0.5,
+        "beta_max":1.0
+    }).gen_params()
+
+
+    
+def gen_1khighpass(params):
+    params["effect"]["highpass"] = Highpass({
+        "freq":1000.0
+    }).gen_params()
     
 def gen_none(params):
     """DO Nothing"""
 
+def gen_rand(params):
+    f = random.sample(effects.values(),1)[0]
+    print f
+    f(params)
+
+def gen_manyrand(params):
+    for i in range(0,random.randrange(2,6)):
+        gen_rand(params)
+    
 # sign up effects
 effects = {
     "reverb":gen_reverb,
     "subtlereverb":gen_subtlereverb,
     "manytrees":gen_manytrees,
     "tree":gen_tree,
+    "rand":gen_rand,
+    "manyrand":gen_manyrand,
+    "highpass":gen_highpass,
+    "highhighpass":gen_highhighpass,
+    "1khighpass":gen_1khighpass,
+    "whitenoise":gen_whitenoise,
+    "hiss":gen_hiss,
     "none":gen_none
 }
 # so we can provide help!
@@ -120,6 +198,7 @@ parser = argparse.ArgumentParser(description='Audio Fuzzer')
 parser.add_argument('-i', default="in.wav", help='Input wavefile')
 parser.add_argument('-o', default="out.wav", help="Output wavefile")
 parser.add_argument('-csd', default="audio-fuzzer.csd", help="Output CSD file")
+parser.add_argument('-stereo', action="store_true", help="Output stereo wav files")
 parser.add_argument('-effect', default="none", nargs='*', help="Which effect to choose from: %s" % effect_list_str)
 
 args = parser.parse_args()
@@ -132,8 +211,14 @@ template = env.get_template("audio-fuzzer.csd.jinja2")
 # init our data to template
 params = {
     "wavefile":args.i,    
-    "effect":{}
+    "effect":{},
+    "stereo":int(args.stereo)
 }
+
+fd = open("params.json","w")
+fd.write(json.dumps(params))
+fd.close()
+
 
 # apply effects
 for effect in args.effect:
