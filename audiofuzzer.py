@@ -60,6 +60,27 @@ class Reverb(Effect):
         })
         self.params = [self.roomsize, self.damp]
 
+class Tree(Effect):
+    """ I represent a Tree """
+    name = "Tree"
+    def __init__(self,d=None):
+        if d == None:
+            d = dict()
+        self.name = Tree.name
+        self.q = Param({"name":"q",
+               "v":d.get("q",None),
+               "min":d.get("q_min",1.0),
+               "max":d.get("q_max",100.0)
+        })
+        self.cf = Param({"name":"cf",
+               "v":d.get("cf",None),
+               "min":d.get("cf_min",400),
+               "max":d.get("cf_max",4000)
+        })
+        self.params = [self.q, self.cf]
+
+
+        
 def gen_reverb(params):
     params["effect"]["reverb"] = Reverb().gen_params()
 
@@ -71,6 +92,16 @@ def gen_subtlereverb(params):
         "damp_max":0.99
     }).gen_params()
 
+def gen_tree(params):
+    params["effect"]["tree"] = Tree().gen_params()
+
+def gen_manytrees(params):
+    params["effect"]["tree"] = Tree({
+        "cf_min":400.0,
+        "cf_max":1000.0
+    }).gen_params()
+
+    
 def gen_none(params):
     """DO Nothing"""
 
@@ -78,6 +109,8 @@ def gen_none(params):
 effects = {
     "reverb":gen_reverb,
     "subtlereverb":gen_subtlereverb,
+    "manytrees":gen_manytrees,
+    "tree":gen_tree,
     "none":gen_none
 }
 # so we can provide help!
