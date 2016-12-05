@@ -3,6 +3,7 @@ import jinja2
 import argparse
 import os
 import json
+import tempfile
 
 def get_random_generator(name):
     """ I generate functions that choose random numbers """
@@ -197,11 +198,16 @@ effect_list_str = ", ".join(effects.keys())
 parser = argparse.ArgumentParser(description='Audio Fuzzer')
 parser.add_argument('-i', default="in.wav", help='Input wavefile')
 parser.add_argument('-o', default="out.wav", help="Output wavefile")
-parser.add_argument('-csd', default="audio-fuzzer.csd", help="Output CSD file")
+parser.add_argument('-csd', default="RANDOM", help="Output CSD file")
 parser.add_argument('-stereo', action="store_true", help="Output stereo wav files")
 parser.add_argument('-effect', default="none", nargs='*', help="Which effect to choose from: %s" % effect_list_str)
 
 args = parser.parse_args()
+if args.csd == "RANDOM":
+    tf = tempfile.NamedTemporaryFile(suffix=".csd")
+    args.csd = tf.name
+
+
 
 # get the jinja going
 env = jinja2.Environment(autoescape=False,
