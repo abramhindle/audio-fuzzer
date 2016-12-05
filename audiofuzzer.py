@@ -215,6 +215,7 @@ params = {
     "stereo":int(args.stereo)
 }
 
+
 fd = open("params.json","w")
 fd.write(json.dumps(params))
 fd.close()
@@ -232,5 +233,6 @@ print out
 fd.close()
 
 # get csound to render it
-command = "csound %s -o %s -W" % (args.csd,args.o)
+channels = 1 + int(args.stereo)
+command = "csound %s --nchnls=%s -o %s -W" % (args.csd,channels,args.o)
 os.system(command)
