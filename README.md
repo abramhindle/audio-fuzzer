@@ -76,3 +76,8 @@ Add hiss
 ```
     python  auduiofuzzer.py -stereo -i input.wav -o output.wav -effect hiss
 ```
+
+License
+=======
+
+Assume Apache 2.0 (c) 2016 Abram Hindle unless otherwise stated.
